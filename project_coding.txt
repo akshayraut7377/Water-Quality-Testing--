@@ -1,0 +1,298 @@
+
+#include <LiquidCrystal.h>
+#define turbuditypin A1 //IR sensor pin
+
+#define pHpin A0
+#define  vcc 13// relay in pin
+#define  gnd 12// relay in pin
+#define  button 11// relay in pin
+void SendMessage1();void  SendMessage2(); void SendMessage3();void SendMessage4();void SendMessage5();
+LiquidCrystal lcd(4, 5, 6, 7, 8, 9);
+const int trigPin = 2;
+const int echoPin = 3;
+String serialdata;char dat;
+// defining variables
+long duration;
+int DIST, distance,turbidity,PH;int buttonstatus=0;
+
+String sendph,sendturbi,sendstatus,level;
+unsigned long int avgValue;int pHavg[10];int temp;
+float pHvalue; int negative = 0;float slope = 0.59;
+float offset = 2.97;  float offset2 = 0; int j;int bt; 
+void setup() {
+
+
+
+  
+  
+  lcd.begin(16, 2);
+  pinMode(trigPin, OUTPUT);
+pinMode(echoPin, INPUT);
+ pinMode(vcc, OUTPUT);
+  pinMode(gnd, OUTPUT);
+pinMode(button, INPUT);
+  Serial.begin(115200);
+//  pinMode(pump,OUTPUT);
+ pinMode(turbuditypin,INPUT);
+ pinMode(pHpin,INPUT);
+//  pinMode(button,INPUT);
+digitalWrite(vcc,HIGH);
+   digitalWrite(gnd,LOW);
+  lcd.setCursor(0, 0);
+  lcd.print("GSM based water ");
+   lcd.setCursor(0, 1);
+  lcd.print("quality measurm.");
+  delay(2000);
+ Serial.println("AT+CNMI=2,2,0,0,0"); // AT Command to recieve a live SMS
+  
+ delay(3000);
+  lcd.clear();
+}
+  
+
+void loop() 
+{
+  
+
+ lcd.clear();
+
+ 
+
+ if (Serial.available() > 0) 
+ {
+ while(Serial.available() > 0)
+ {
+
+ 
+   if(Serial.find("getvalue")) {
+    getturbi();
+    getlevel();
+     lcd.clear();
+      lcd.setCursor(0, 0);
+       lcd.print("msg received");
+    SendMessage1();SendMessage2();SendMessage3();SendMessage4();SendMessage5();
+    Serial.println("in get value");
+ //delay(100);
+  }
+   if(Serial.find("RING"))
+  {
+     getturbi();
+    getlevel();
+    lcd.clear();
+      lcd.setCursor(0, 0);
+       lcd.print("call received");
+    SendMessage1();SendMessage2();SendMessage3();SendMessage4();SendMessage5();
+  Serial.println("in RING find");
+  }
+  
+  }
+  
+ }
+bt=digitalRead(button);
+ if(bt==HIGH)
+  {
+     getturbi();
+    getlevel();
+    lcd.clear();
+      lcd.setCursor(0, 0);
+       lcd.print("button pressed");
+    SendMessage1();SendMessage2();SendMessage3();SendMessage4();SendMessage5();
+ // Serial.println("in RING find");
+  }
+ else{
+   getturbi();
+    getlevel();
+  }
+ 
+ serialdata="\n";
+ 
+ 
+
+
+delay(900);
+   }
+
+
+void SendMessage1()
+{
+ 
+   lcd.setCursor(0,1);
+  lcd.print("SENDING msg1....");
+ Serial.println("AT+CMGF=1");    //Sets the GSM Module in Text Mode
+  delay(1000);  // Delay of 1000 milli seconds or 1 second
+  Serial.println("AT+CMGS=\"+918459859173\"\r"); // Replace x with mobile number
+  delay(1000);
+Serial.println("Level="+level+"cm"+"PH="+sendph+",Turbidity="+sendturbi+"%");// The SMS text you want to send
+  delay(100);
+   Serial.println((char)26);// ASCII code of CTRL+Z
+   Serial.println("msg1");// ASCII code of CTRL+Z
+  delay(4000);             
+}
+void SendMessage2()
+{
+
+   lcd.setCursor(0,1);
+  lcd.print("SENDING msg2....");
+ Serial.println("AT+CMGF=1");    //Sets the GSM Module in Text Mode
+  delay(1000);  // Delay of 1000 milli seconds or 1 second
+    Serial.println("AT+CMGS=\"+917083076843\"\r"); // Replace x with mobile number
+  delay(1000);
+ Serial.println("Level="+level+"cm"+"PH="+sendph+",Turbidity="+sendturbi+"%");// The SMS text you want to send
+  delay(1000);
+   Serial.println((char)26);// ASCII code of CTRL+Z
+   Serial.println("msg2");// ASCII code of CTRL+Z
+  delay(4000);
+}
+void SendMessage3()
+{
+
+   lcd.setCursor(0,1);
+  lcd.print("SENDING msg3....");
+ Serial.println("AT+CMGF=1");    //Sets the GSM Module in Text Mode
+  delay(1000);  // Delay of 1000 milli seconds or 1 second
+  Serial.println("AT+CMGS=\"+917768071448\"\r"); // Replace x with mobile number
+  delay(1000);
+ Serial.println("Level="+level+"cm"+"PH="+sendph+",Turbidity="+sendturbi+"%");// The SMS text you want to send
+  delay(1000);
+   Serial.println((char)26);// ASCII code of CTRL+Z
+   Serial.println("msg3");// ASCII code of CTRL+Z
+  delay(4000);
+
+}
+void SendMessage4()
+{
+
+    lcd.setCursor(0,1);
+  lcd.print("SENDING msg4....");
+ Serial.println("AT+CMGF=1");    //Sets the GSM Module in Text Mode
+  delay(1000);  // Delay of 1000 milli seconds or 1 second
+  Serial.println("AT+CMGS=\"+919075704114\"\r"); // Replace x with mobile number
+  delay(1000);
+  Serial.println("Level="+level+"cm"+"PH="+sendph+",Turbidity="+sendturbi+"%");// The SMS text you want to send
+  delay(1000);
+   Serial.println((char)26);// ASCII code of CTRL+Z
+   Serial.println("msg4");// ASCII code of CTRL+Z 
+  delay(4000);
+   
+
+}
+
+void SendMessage5()
+{
+
+    lcd.setCursor(0,1);
+  lcd.print("SENDING msg5....");
+ Serial.println("AT+CMGF=1");    //Sets the GSM Module in Text Mode
+  delay(1000);  // Delay of 1000 milli seconds or 1 second
+  Serial.println("AT+CMGS=\"+919689151807\"\r"); // Replace x with mobile number
+  delay(1000);
+  Serial.println("Level="+level+"cm"+"PH="+sendph+",Turbidity="+sendturbi+"%");// The SMS text you want to send
+  delay(100);
+   Serial.println((char)26);// ASCII code of CTRL+Z
+   Serial.println("msg5");// ASCII code of CTRL+Z
+  delay(4000);
+
+}
+
+void getlevel()
+{
+  digitalWrite(trigPin, LOW);
+delayMicroseconds(2);
+// Sets the trigPin on HIGH state for 10 micro seconds
+digitalWrite(trigPin, HIGH);
+delayMicroseconds(10);
+digitalWrite(trigPin, LOW);
+// Reads the echoPin, returns the sound wave travel time in microseconds
+duration = pulseIn(echoPin, HIGH);
+// Calculating the distance
+DIST= duration*0.034/2;
+// Prints the distance on the Serial Monitor
+if(DIST>4 && DIST<400)
+{
+  distance=DIST;
+   
+
+
+  lcd.setCursor(0, 0);
+  lcd.print("disT=");
+  lcd.print(distance);
+   lcd.print("cm");
+   level=String(distance); 
+}
+    else
+{
+   lcd.clear();
+   lcd.setCursor(0, 0);
+  lcd.print(" Invalid distance");
+  delay(700);
+    lcd.clear();
+  }delay(700);
+  
+}
+
+void getturbi()
+{
+  turbidity=analogRead(turbuditypin);
+  turbidity=turbidity/10.24;
+
+  
+  
+ lcd.setCursor(0, 1);
+ lcd.print("Turbi=");
+   lcd.print(turbidity);
+   lcd.print("% ");
+  lcd.print("PH=");  //water ph
+  lcd.print(pHvalue);
+//  lcd.setCursor(11, 0);
+//    lcd.print("OFF");
+   //  digitalWrite(pump,LOW);
+  sendph=String(pHvalue);
+  sendturbi=String(turbidity);
+  sendstatus="Filter is OFF";
+    delay(200);
+    
+
+}
+
+
+
+  void readPH()
+{
+  for(int i=0; i<10; i++)                   //get 10 sample values from the sensor to smooth the value
+    { 
+      pHavg[i] = analogRead(pHpin);         //get reading from pH sensor and put in array
+      delay(10);                            //short delay between readings
+    }
+    
+  for(int i=0; i<9; i++)                    //sort the analog values from small to large
+    {
+      for(int j=i+1; j<10; j++)             
+        {
+          if(pHavg[i] > pHavg[j])           //if "i" value of array is bigger than "j" value
+            {
+              temp = pHavg[i];              //assign "i" to temporary variable
+              pHavg[i] = pHavg[j];          //switch "j" to "i" location
+              pHavg[j] = temp;              //switch "i" to "j" location
+            }
+        }
+    }
+  avgValue = 0;
+  for(int i=2; i<8; i++)                    //take the value total of 6 center array values
+    {
+      avgValue += pHavg[i];                 //get total
+    }
+  pHvalue = (float)avgValue*5.0/1024/6;     //map the analog (0-1023) into millivolt (0-5).. division by 6 for average
+
+  if (negative == 0)                        //if the offset is positive... see calibration subroutine.. negative is initialized as 0
+    {
+      pHvalue = (slope*3.5*pHvalue + offset + offset2); //convert the millivolt into pH value, with positive offset and slope from calibration
+    }
+  else
+    {
+      pHvalue = (slope*3.5*pHvalue - offset + offset2); //convert the millivolt into pH value, with negative offset and slope from calibration
+    }
+}
+
+
+
+
